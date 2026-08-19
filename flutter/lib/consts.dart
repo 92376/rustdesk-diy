@@ -189,6 +189,10 @@ const String kOptionHideServerSetting = "hide-server-settings";
 const String kOptionHideProxySetting = "hide-proxy-settings";
 const String kOptionHideWebSocketSetting = "hide-websocket-settings";
 const String kOptionHideStopService = "hide-stop-service";
+const String kOptionHideAndroidConnectionNotification =
+    "hide-android-connection-notification";
+const String kOptionHideAndroidConnectionCard =
+    "hide-android-connection-card";
 const String kOptionHideRemotePrinterSetting = "hide-remote-printer-settings";
 const String kOptionHideSecuritySetting = "hide-security-settings";
 const String kOptionHideNetworkSetting = "hide-network-settings";

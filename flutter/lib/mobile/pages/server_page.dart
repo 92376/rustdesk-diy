@@ -210,10 +210,16 @@ class _ServerPageState extends State<ServerPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         buildPresetPasswordWarningMobile(),
-                        gFFI.serverModel.isStart
-                            ? ServerInfo()
-                            : ServiceNotRunningNotification(),
-                        const ConnectionManager(),
+                        if (!gFFI.serverModel.isStart)
+                          ServiceNotRunningNotification()
+                        else if (bind.mainGetBuildinOption(
+                                key: kOptionHideAndroidConnectionCard) !=
+                            'Y')
+                          ServerInfo(),
+                        if (bind.mainGetBuildinOption(
+                                key: kOptionHideAndroidConnectionCard) !=
+                            'Y')
+                          const ConnectionManager(),
                         const PermissionChecker(),
                         SizedBox.fromSize(size: const Size(0, 15.0)),
                       ],

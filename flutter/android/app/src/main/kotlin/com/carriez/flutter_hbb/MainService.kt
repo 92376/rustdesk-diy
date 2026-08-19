@@ -130,9 +130,13 @@ class MainService : Service() {
                         if (!isFileTransfer && !isStart) {
                             startCapture()
                         }
-                        onClientAuthorizedNotification(id, type, username, peerId)
+                        if (FFI.getBuildinOption("hide-android-connection-notification") != "Y") {
+                            onClientAuthorizedNotification(id, type, username, peerId)
+                        }
                     } else {
-                        loginRequestNotification(id, type, username, peerId)
+                        if (FFI.getBuildinOption("hide-android-connection-notification") != "Y") {
+                            loginRequestNotification(id, type, username, peerId)
+                        }
                     }
                 } catch (e: JSONException) {
                     e.printStackTrace()
