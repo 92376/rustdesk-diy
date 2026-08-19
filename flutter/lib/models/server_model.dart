@@ -579,7 +579,12 @@ class ServerModel with ChangeNotifier {
       }
       scrollToBottom();
       notifyListeners();
-      if (isAndroid && !client.authorized) showLoginDialog(client);
+      if (isAndroid &&
+          !client.authorized &&
+          bind.mainGetBuildinOption(key: kOptionHideAndroidConnectionCard) !=
+              'Y') {
+        showLoginDialog(client);
+      }
       if (isAndroid) androidUpdatekeepScreenOn();
     } catch (e) {
       debugPrint("Failed to call loginRequest,error:$e");
