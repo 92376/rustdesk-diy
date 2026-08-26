@@ -20,7 +20,7 @@ if [ -z "$VCPKG_ROOT" ]; then
   exit 1
 fi
 
-API_LEVEL="21"
+API_LEVEL="22"
 
 # Get directory of this script
 
@@ -96,7 +96,10 @@ function build {
 
   echo "*** [$ANDROID_ABI][Start] Build and install vcpkg dependencies"
   pushd "$SCRIPTDIR/.."
-  "$VCPKG_COMMAND" install --triplet "$VCPKG_TARGET" --x-install-root="$VCPKG_ROOT/installed"
+  "$VCPKG_COMMAND" install \
+    --triplet "$VCPKG_TARGET" \
+    --overlay-triplets="$SCRIPTDIR/../res/vcpkg/triplets" \
+    --x-install-root="$VCPKG_ROOT/installed"
   popd
   head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-$VCPKG_TARGET-rel-out.log" || true
   echo "*** [$ANDROID_ABI][Finished] Build and install vcpkg dependencies"

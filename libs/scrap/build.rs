@@ -158,6 +158,39 @@ fn generate_bindings(
         b = b.clang_arg(format!("-I{}", dir.display()));
     }
 
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android") {
+        let target = env::var("TARGET").expect("TARGET is required for Android bindgen");
+        let (clang_target, target_include) = match target.as_str() {
+            "aarch64-linux-android" => ("aarch64-linux-android22", "aarch64-linux-android"),
+            "armv7-linux-androideabi" => ("armv7a-linux-androideabi21", "arm-linux-androideabi"),
+            "i686-linux-android" => ("i686-linux-android21", "i686-linux-android"),
+            "x86_64-linux-android" => ("x86_64-linux-android21", "x86_64-linux-android"),
+            _ => panic!("Unsupported Android target for bindgen: {}", target),
+        };
+        let ndk = env::var_os("ANDROID_NDK_HOME")
+            .or_else(|| env::var_os("ANDROID_NDK_ROOT"))
+            .or_else(|| env::var_os("NDK_HOME"))
+            .expect("ANDROID_NDK_HOME is required for Android bindgen");
+        let host = if cfg!(windows) {
+            "windows-x86_64"
+        } else if cfg!(target_os = "macos") {
+            "darwin-x86_64"
+        } else {
+            "linux-x86_64"
+        };
+        let sysroot = PathBuf::from(ndk)
+            .join("toolchains")
+            .join("llvm")
+            .join("prebuilt")
+            .join(host)
+            .join("sysroot");
+        let include = sysroot.join("usr").join("include");
+        b = b
+            .clang_arg(format!("--target={clang_target}"))
+            .clang_arg(format!("--sysroot={}", sysroot.display()))
+            .clang_arg(format!("-I{}", include.display()))
+            .clang_arg(format!("-I{}", include.join(target_include).display()));
+    }
     b.generate().unwrap().write_to_file(ffi_rs).unwrap();
     fs::copy(ffi_rs, exact_file).ok(); // ignore failure
 }

@@ -32,6 +32,7 @@ else()
 endif()
 
 set(aom_target_cpu "")
+set(aom_asm_compiler "")
 if(VCPKG_TARGET_IS_UWP OR (VCPKG_TARGET_IS_WINDOWS AND VCPKG_TARGET_ARCHITECTURE MATCHES "^arm"))
     # UWP + aom's assembler files result in weirdness and build failures
     # Also, disable assembly on ARM and ARM64 Windows to fix compilation issues.
@@ -42,10 +43,22 @@ if(VCPKG_TARGET_ARCHITECTURE STREQUAL "arm" AND VCPKG_TARGET_IS_LINUX)
   set(aom_target_cpu "-DENABLE_NEON=OFF")
 endif()
 
+if(VCPKG_TARGET_IS_ANDROID AND VCPKG_HOST_IS_WINDOWS)
+    if(NOT DEFINED ENV{ANDROID_NDK_HOME})
+        message(FATAL_ERROR "ANDROID_NDK_HOME is required to build AOM for Android on Windows")
+    endif()
+    file(TO_CMAKE_PATH "$ENV{ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe" aom_android_asm_compiler)
+    if(NOT EXISTS "${aom_android_asm_compiler}")
+        message(FATAL_ERROR "Android NDK assembler compiler not found: ${aom_android_asm_compiler}")
+    endif()
+    set(aom_asm_compiler "-DCMAKE_ASM_COMPILER=${aom_android_asm_compiler}")
+endif()
+
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
     OPTIONS
         ${aom_target_cpu}
+        ${aom_asm_compiler}
         -DENABLE_DOCS=OFF
         -DENABLE_EXAMPLES=OFF
         -DENABLE_TESTDATA=OFF

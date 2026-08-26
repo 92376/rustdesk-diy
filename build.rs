@@ -77,14 +77,36 @@ fn install_android_deps() {
     println!("cargo:rustc-link-lib=OpenSLES");
 }
 
+fn gen_version() {
+    use std::io::Write;
+
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    let manifest = std::fs::read_to_string("Cargo.toml").unwrap();
+    let version = manifest
+        .lines()
+        .find_map(|line| {
+            let (key, value) = line.split_once('=')?;
+            (key.trim() == "version").then(|| value.trim())
+        })
+        .expect("package version is missing from Cargo.toml");
+    let build_date = chrono::Local::now().format("%Y-%m-%d %H:%M");
+    let mut file = std::fs::File::create("src/version.rs").unwrap();
+    writeln!(file, "pub const VERSION: &str = {version};").unwrap();
+    writeln!(file, "#[allow(dead_code)]").unwrap();
+    writeln!(file, "pub const BUILD_DATE: &str = \"{build_date}\";").unwrap();
+    file.sync_all().ok();
+}
+
 fn main() {
-    hbb_common::gen_version();
+    gen_version();
     install_android_deps();
-    #[cfg(all(windows, feature = "inline"))]
-    build_manifest();
-    #[cfg(windows)]
-    build_windows();
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    if target_os == "windows" {
+        #[cfg(all(windows, feature = "inline"))]
+        build_manifest();
+        #[cfg(windows)]
+        build_windows();
+    }
     if target_os == "macos" {
         #[cfg(target_os = "macos")]
         build_mac();
