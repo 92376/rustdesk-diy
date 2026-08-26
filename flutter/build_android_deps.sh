@@ -36,8 +36,38 @@ fi
 
 # NDK llvm toolchain
 
-HOST_TAG="linux-x86_64" # current platform, set as `ls $ANDROID_NDK/toolchains/llvm/prebuilt/`
-TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/$HOST_TAG
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) HOST_TAG="windows-x86_64" ;;
+  Linux*) HOST_TAG="linux-x86_64" ;;
+  Darwin*)
+    if [ "$(uname -m)" = "arm64" ]; then
+      HOST_TAG="darwin-arm64"
+    else
+      HOST_TAG="darwin-x86_64"
+    fi
+    ;;
+  *)
+    echo "Failed! Unsupported NDK host: $(uname -s)" >&2
+    exit 1
+    ;;
+esac
+
+TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/$HOST_TAG"
+if [ ! -d "$TOOLCHAIN" ]; then
+  echo "Failed! Android NDK toolchain not found: $TOOLCHAIN" >&2
+  exit 1
+fi
+
+VCPKG_COMMAND="$VCPKG_ROOT/vcpkg"
+if [ ! -x "$VCPKG_COMMAND" ] && [ -x "$VCPKG_ROOT/vcpkg.exe" ]; then
+  VCPKG_COMMAND="$VCPKG_ROOT/vcpkg.exe"
+fi
+if [ ! -x "$VCPKG_COMMAND" ]; then
+  echo "Failed! vcpkg executable not found under $VCPKG_ROOT" >&2
+  exit 1
+fi
+
+echo "Using Android NDK host: $HOST_TAG"
 
 function build {
   ANDROID_ABI=$1
@@ -66,7 +96,7 @@ function build {
 
   echo "*** [$ANDROID_ABI][Start] Build and install vcpkg dependencies"
   pushd "$SCRIPTDIR/.."
-  $VCPKG_ROOT/vcpkg install --triplet $VCPKG_TARGET --x-install-root="$VCPKG_ROOT/installed"
+  "$VCPKG_COMMAND" install --triplet "$VCPKG_TARGET" --x-install-root="$VCPKG_ROOT/installed"
   popd
   head -n 100 "${VCPKG_ROOT}/buildtrees/ffmpeg/build-$VCPKG_TARGET-rel-out.log" || true
   echo "*** [$ANDROID_ABI][Finished] Build and install vcpkg dependencies"
