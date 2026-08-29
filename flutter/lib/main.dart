@@ -186,6 +186,9 @@ void runMobileApp() async {
   draggablePositions.load();
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
+  if (isAndroid) {
+    await gFFI.serverModel.fetchID();
+  }
   runApp(App());
   // Match the desktop client: start the Android service during application
   // launch instead of waiting for the user to open the Share screen tab.

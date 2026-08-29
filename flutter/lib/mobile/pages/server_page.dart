@@ -212,6 +212,7 @@ class _ServerPageState extends State<ServerPage> {
                         buildPresetPasswordWarningMobile(),
                         // Connection/service status cards are intentionally
                         // hidden on the customized Android client.
+                        const DeviceIdCard(),
                         const PermissionChecker(),
                         SizedBox.fromSize(size: const Size(0, 15.0)),
                       ],
@@ -580,15 +581,6 @@ class _PermissionCheckerState extends State<PermissionChecker> {
   @override
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
-    final hasAudioPermission = androidVersion >= 30;
-    final allowPermChangeInAcceptWindow = option2bool(
-        kOptionEnablePermChangeInAcceptWindow,
-        bind.mainGetBuildinOption(
-          key: kOptionEnablePermChangeInAcceptWindow,
-        ));
-    final permissionChangeLocked = isAndroid &&
-        serverModel.clients.any((c) => !c.disconnected) &&
-        !allowPermChangeInAcceptWindow;
     return PaddingCard(
         title: translate("Permissions"),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -599,25 +591,36 @@ class _PermissionCheckerState extends State<PermissionChecker> {
             serverModel.inputOk,
             serverModel.toggleInput,
           ),
-          hasAudioPermission
-              ? PermissionRow(translate("Audio Capture"), serverModel.audioOk,
-                  serverModel.toggleAudio,
-                  enabled: !permissionChangeLocked)
-              : Row(children: [
-                  Icon(Icons.info_outline).marginOnly(right: 15),
-                  Expanded(
-                      child: Text(
-                    translate("android_version_audio_tip"),
-                    style: const TextStyle(color: MyTheme.darkGray),
-                  ))
-                ]),
-          PermissionRow(
-            translate("Enable clipboard"),
-            serverModel.clipboardOk,
-            serverModel.toggleClipboard,
-            enabled: !permissionChangeLocked,
-          ),
         ]));
+  }
+}
+
+class DeviceIdCard extends StatelessWidget {
+  const DeviceIdCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final model = Provider.of<ServerModel>(context);
+    final id = model.serverId.value.text;
+    return PaddingCard(
+      title: translate('ID'),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SelectableText(id,
+              style:
+                  const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.copy_outlined),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: id.trim()));
+              showToast(translate('Copied'));
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
