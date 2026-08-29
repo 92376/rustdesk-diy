@@ -187,6 +187,12 @@ void runMobileApp() async {
   await Future.wait([gFFI.abModel.loadCache(), gFFI.groupModel.loadCache()]);
   gFFI.userModel.refreshCurrentUser();
   runApp(App());
+  // Match the desktop client: start the Android service during application
+  // launch instead of waiting for the user to open the Share screen tab.
+  if (isAndroid) {
+    Future.delayed(
+        Duration.zero, () => gFFI.serverModel.startServiceAutomatically());
+  }
   await initUniLinks();
 }
 

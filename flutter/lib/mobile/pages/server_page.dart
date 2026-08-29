@@ -189,13 +189,6 @@ class _ServerPageState extends State<ServerPage> {
       await gFFI.serverModel.fetchID();
     });
     gFFI.serverModel.checkAndroidPermission();
-    // Start the Android sharing service as soon as the page is opened.  The
-    // platform projection prompt is the only confirmation the user needs.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !gFFI.serverModel.isStart) {
-        gFFI.serverModel.startServiceAutomatically();
-      }
-    });
   }
 
   @override
@@ -588,8 +581,6 @@ class _PermissionCheckerState extends State<PermissionChecker> {
   Widget build(BuildContext context) {
     final serverModel = Provider.of<ServerModel>(context);
     final hasAudioPermission = androidVersion >= 30;
-    final hideStopService = isAndroid &&
-        bind.mainGetBuildinOption(key: kOptionHideStopService) == 'Y';
     final allowPermChangeInAcceptWindow = option2bool(
         kOptionEnablePermChangeInAcceptWindow,
         bind.mainGetBuildinOption(
@@ -601,16 +592,6 @@ class _PermissionCheckerState extends State<PermissionChecker> {
     return PaddingCard(
         title: translate("Permissions"),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          serverModel.mediaOk && !hideStopService
-              ? ElevatedButton.icon(
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.red)),
-                      icon: const Icon(Icons.stop),
-                      onPressed: serverModel.toggleService,
-                      label: Text(translate("Stop service")))
-                  .marginOnly(bottom: 8)
-              : SizedBox.shrink(),
           // Screen capture is provisioned automatically; do not expose the
           // platform permission switch in the customized client.
           PermissionRow(
