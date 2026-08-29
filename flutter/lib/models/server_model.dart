@@ -215,9 +215,9 @@ class ServerModel with ChangeNotifier {
       _fileOk = false;
       bind.mainSetOption(key: kOptionEnableFileTransfer, value: "N");
     } else {
-      final fileOption =
-          await bind.mainGetOption(key: kOptionEnableFileTransfer);
-      _fileOk = fileOption != 'N';
+      // File transfer is mandatory for this customized Android client.
+      _fileOk = true;
+      bind.mainSetOption(key: kOptionEnableFileTransfer, value: defaultOptionYes);
     }
 
     // clipboard
@@ -421,29 +421,22 @@ class ServerModel with ChangeNotifier {
       if (!await AndroidPermissionManager.check(kManageExternalStorage)) {
         await AndroidPermissionManager.request(kManageExternalStorage);
       }
-      final res = await parent.target?.dialogManager
-          .show<bool>((setState, close, context) {
-        submit() => close(true);
-        return CustomAlertDialog(
-          title: Row(children: [
-            const Icon(Icons.warning_amber_sharp,
-                color: Colors.redAccent, size: 28),
-            const SizedBox(width: 10),
-            Text(translate("Warning")),
-          ]),
-          content: Text(translate("android_service_will_start_tip")),
-          actions: [
-            dialogButton("Cancel", onPressed: close, isOutline: true),
-            dialogButton("OK", onPressed: submit),
-          ],
-          onSubmit: submit,
-          onCancel: close,
-        );
-      });
-      if (res == true) {
-        startService();
-      }
+      startService();
     }
+  }
+
+  /// Starts Android sharing without showing the app's extra confirmation
+  /// dialog. Android still displays its required MediaProjection prompt once.
+  Future<void> startServiceAutomatically() async {
+    if (_isStart) return;
+    await checkRequestNotificationPermission();
+    if (bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) != 'Y') {
+      await checkFloatingWindowPermission();
+    }
+    if (!await AndroidPermissionManager.check(kManageExternalStorage)) {
+      await AndroidPermissionManager.request(kManageExternalStorage);
+    }
+    await startService();
   }
 
   /// Start the screen sharing service.
