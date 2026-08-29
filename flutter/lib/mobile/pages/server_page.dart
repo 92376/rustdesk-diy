@@ -603,7 +603,7 @@ class DeviceIdCard extends StatelessWidget {
     final model = Provider.of<ServerModel>(context);
     final id = model.serverId.value.text;
     return PaddingCard(
-      title: '设备 ID',
+      title: 'Id',
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(id,
