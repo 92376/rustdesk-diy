@@ -603,22 +603,12 @@ class DeviceIdCard extends StatelessWidget {
     final model = Provider.of<ServerModel>(context);
     final id = model.serverId.value.text;
     return PaddingCard(
-      title: translate('ID'),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SelectableText(id,
-              style:
-                  const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.copy_outlined),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: id.trim()));
-              showToast(translate('Copied'));
-            },
-          ),
-        ],
+      title: '设备 ID',
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(id,
+            style:
+                const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
       ),
     );
   }
